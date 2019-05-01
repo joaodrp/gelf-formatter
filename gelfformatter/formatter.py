@@ -10,7 +10,7 @@ from pythonjsonlogger.jsonlogger import RESERVED_ATTRS, JsonFormatter
 GELF_VERSION = "1.1"
 
 # Map logging levels to syslog levels.
-LEVELS = {
+GELF_LEVELS = {
     logging.DEBUG: 7,
     logging.INFO: 6,
     logging.WARNING: 4,
@@ -19,11 +19,19 @@ LEVELS = {
 }
 
 # Attributes prohibited by the GELF specification.
-IGNORED_ATTRS = ["id"]
+GELF_IGNORED_ATTRS = ["id"]
 
 
 def _prefix(str):
     return str if str.startswith("_") else "_%s" % str
+
+
+def chomp(x):
+    if x.endswith("\r\n"):
+        return x[:-2]
+    if x.endswith("\n") or x.endswith("\r"):
+        return x[:-1]
+    return x
 
 
 class GelfFormatter(JsonFormatter):
@@ -57,8 +65,8 @@ class GelfFormatter(JsonFormatter):
         GELF 1.1 specification.
 
         :param log_record: The output log record
-        :type log_record: OrderedDict :param
-        record: The input log record
+        :type log_record: OrderedDict
+        :param record: The input log record
         :type record: logging.LogRecord
         :param message_dict: Additional fields (not used, ignore)
         :type message_dict: dict
@@ -72,14 +80,14 @@ class GelfFormatter(JsonFormatter):
             version=GELF_VERSION,
             short_message=record.getMessage(),
             timestamp=record.created,
-            level=LEVELS[record.levelno],
+            level=GELF_LEVELS[record.levelno],
             host=self.hostname,
         )
 
         # Capture exception info, if any
         if record.exc_info is not None:
             log_record["full_message"] = "\n".join(
-                traceback.format_exception(*record.exc_info)
+                map(chomp, traceback.format_exception(*record.exc_info))
             )
 
         record_dict = record.__dict__
@@ -93,10 +101,10 @@ class GelfFormatter(JsonFormatter):
         # Add extra additional fields, if any
         if self.extra_add_fields:
             for key, value in self.extra_add_fields.items():
-                if key not in IGNORED_ATTRS:
+                if key not in GELF_IGNORED_ATTRS:
                     log_record[_prefix(key)] = value
 
         # Everything else is considered an additional attribute
         for key, value in record_dict.items():
-            if key not in RESERVED_ATTRS and key not in IGNORED_ATTRS:
+            if key not in RESERVED_ATTRS and key not in GELF_IGNORED_ATTRS:
                 log_record[_prefix(key)] = value

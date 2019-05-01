@@ -1,19 +1,24 @@
 import json
 import logging
 import traceback
-from io import StringIO
-from unittest import TestCase, mock
+from unittest import TestCase
 
-from gelfformatter.formatter import LEVELS, GelfFormatter
+from gelfformatter.formatter import GELF_LEVELS, GelfFormatter, _prefix, chomp
+from mock import MagicMock, patch  # Python 2.7 support
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO  # Python 3 support
+
 
 TIME = 1556565019.768748
 HOST = "server-x"
 MSG = "test message"
-REPEATED = {"version": "1.1", "short_message": MSG, "timestamp": TIME, "host": HOST}
 
 
-@mock.patch("time.time", mock.MagicMock(return_value=TIME))
-@mock.patch("socket.gethostname", mock.MagicMock(return_value=HOST))
+@patch("time.time", MagicMock(return_value=TIME))
+@patch("socket.gethostname", MagicMock(return_value=HOST))
 class TestGelfFormatter(TestCase):
     def setUp(self):
         self.logger = logging.getLogger("test")
@@ -31,7 +36,16 @@ class TestGelfFormatter(TestCase):
         self.logger.info(MSG)
 
         gelf = json.loads(self.buffer.getvalue())
-        self.assertEqual(gelf, {**REPEATED, "level": 6})
+        self.assertEqual(
+            gelf,
+            {
+                "version": "1.1",
+                "short_message": MSG,
+                "timestamp": TIME,
+                "host": HOST,
+                "level": 6,
+            },
+        )
 
     def testExtra(self):
         formatter = GelfFormatter()
@@ -51,7 +65,10 @@ class TestGelfFormatter(TestCase):
         self.assertEqual(
             gelf,
             {
-                **REPEATED,
+                "version": "1.1",
+                "short_message": MSG,
+                "timestamp": TIME,
+                "host": HOST,
                 "level": 6,
                 "_string": extra["string"],
                 "_int": extra["int"],
@@ -70,21 +87,31 @@ class TestGelfFormatter(TestCase):
             raise Exception("some error")
         except Exception:
             pass
-        full_message = traceback.format_exc()
+
+        full_message = chomp(traceback.format_exc())
 
         self.logger.exception(MSG)
 
         gelf = json.loads(self.buffer.getvalue())
-        self.assertEqual(gelf, {**REPEATED, "level": 3, "full_message": full_message})
+        self.assertEqual(gelf["full_message"], full_message)
 
     def testLevels(self):
         formatter = GelfFormatter()
         self.log_handler.setFormatter(formatter)
 
-        for logging_level, syslog_level in LEVELS.items():
+        for logging_level, syslog_level in GELF_LEVELS.items():
             self.logger.log(logging_level, MSG)
             gelf = json.loads(self.buffer.getvalue())
-            self.assertEqual(gelf, {**REPEATED, "level": syslog_level})
+            self.assertEqual(
+                gelf,
+                {
+                    "version": "1.1",
+                    "short_message": MSG,
+                    "timestamp": TIME,
+                    "host": HOST,
+                    "level": syslog_level,
+                },
+            )
             self.buffer.truncate(0)
             self.buffer.seek(0)
 
@@ -107,7 +134,10 @@ class TestGelfFormatter(TestCase):
         self.assertEqual(
             gelf,
             {
-                **REPEATED,
+                "version": "1.1",
+                "short_message": MSG,
+                "timestamp": TIME,
+                "host": HOST,
                 "level": 6,
                 "_file": "test_formatter.py",
                 "_func_name": "testLogRecordAddFields",
@@ -132,5 +162,24 @@ class TestGelfFormatter(TestCase):
         gelf = json.loads(self.buffer.getvalue())
         self.assertEqual(
             gelf,
-            {**REPEATED, "level": 6, "_app": "my-app", "_environment": "development"},
+            {
+                "version": "1.1",
+                "short_message": MSG,
+                "timestamp": TIME,
+                "host": HOST,
+                "level": 6,
+                "_app": "my-app",
+                "_environment": "development",
+            },
         )
+
+
+class TestUtilityMethods(TestCase):
+    def testUnderscorePrefix(self):
+        self.assertEqual(_prefix("foo"), "_foo")
+        self.assertEqual(_prefix("_foo"), "_foo")
+
+    def testChomp(self):
+        self.assertEqual(chomp("foo\r\n"), "foo")
+        self.assertEqual(chomp("foo\n"), "foo")
+        self.assertEqual(chomp("foo"), "foo")
