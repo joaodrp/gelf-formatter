@@ -2,6 +2,9 @@
 .venv
 .tox
 dist
+build
 .coverage
 htmlcov
 __pycache__
+*.pyc
+*.egg-info
