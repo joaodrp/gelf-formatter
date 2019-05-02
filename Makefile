@@ -1,22 +1,18 @@
 .SILENT: ;
 .DEFAULT_GOAL := help
 
-.PHONY: venv
-venv: ## Create and/or activate virtual environment
-	test -f .venv/bin/activate || python -m venv .venv
-	. .venv/bin/activate;
-
 .PHONY: setup
-setup: venv ## Get development dependencies
-	pip install --upgrade pip setuptools
-	pip install -r requirements.txt -r requirements-dev.txt
+
+setup: ## Get development dependencies
+	pip install --upgrade pip setuptools pipenv
+	pipenv install
 
 .PHONY: clean-build
 clean-build:
 	rm -rf build/
 	rm -rf dist/
 	find . -name '*.egg-info' -exec rm -rf {} +
-	find . -name '*.egg' -exec rm -f {} +
+	find . -name '*.egg' -exec rm -rf {} +
 
 .PHONY: clean-pyc
 clean-pyc:
@@ -35,32 +31,32 @@ clean-test:
 clean: clean-build clean-pyc clean-test ## Remove object and cache files
 
 .PHONY: dist
-dist: venv clean ## Package
-	python setup.py sdist bdist_wheel
+dist: clean ## Package
+	pipenv run python setup.py sdist bdist_wheel
 	ls -l dist
 
 .PHONY: publish
-publish: venv clean ## Publish package
-	twine upload dist/*
+publish: clean ## Publish package
+	pipenv run twine upload dist/*
 
 .PHONY: lint
-lint: venv ## Run linters
-	flake8
-	black --check .
+lint: ## Run linters
+	pipenv run flake8
+	pipenv run black --check .
 
 .PHONY: test
-test: venv ## Run test suite
-	python -m unittest discover -v
+test: ## Run test suite
+	pipenv run python -m unittest discover -v
 
 .PHONY: test-all
-test-all: venv ## Run all tests
-	tox
+test-all: ## Run all tests
+	pipenv run tox
 
 .PHONY: coverage
-coverage: venv ## Generate test coverage report
-	coverage run -m --branch unittest discover -v
-	coverage report -m --include='gelfformatter/*'
-	coverage html
+coverage: ## Generate test coverage report
+	pipenv run coverage run -m --branch unittest discover -v
+	pipenv run coverage report -m --include='gelfformatter/*'
+	pipenv run coverage html
 
 .PHONY: ci
 ci: coverage lint ## Run all tests and code checks

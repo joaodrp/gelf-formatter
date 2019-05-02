@@ -1,4 +1,5 @@
 import os
+from io import open
 
 from setuptools import setup
 
@@ -6,11 +7,11 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 about = {}
 with open(
-    os.path.join(here, "gelfformatter", "__version__.py"), mode="r", encoding="utf-8"
+    os.path.join(here, "gelfformatter", "__version__.py"), "r", encoding="utf-8"
 ) as f:
     exec(f.read(), about)
 
-with open("README.md", mode="r", encoding="utf-8") as f:
+with open("README.md", "r", encoding="utf-8") as f:
     readme = f.read()
 
 setup(
@@ -43,4 +44,5 @@ setup(
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
     install_requires=["python-json-logger>=0.1.11,<1.0.0"],
     tests_require=["mock>=2.0.0"],
+    test_suite="tests",
 )

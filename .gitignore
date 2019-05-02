@@ -1,10 +1,10 @@
-.git
-.venv
-.tox
-dist
-build
+.git/
+.tox/
 .coverage
-htmlcov
-__pycache__
+htmlcov/
+dist/
+build/
+.eggs/
+__pycache__/
 *.pyc
 *.egg-info
