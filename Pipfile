@@ -1,0 +1,19 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = "==19.3b0"
+flake8 = "*"
+isort = "*"
+tox = "*"
+coverage = "*"
+twine = "*"
+mock = "*"
+
+[packages]
+python-json-logger = "==0.1.11"
+
+[requires]
+python_version = "3.7"
