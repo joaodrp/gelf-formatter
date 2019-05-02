@@ -3,8 +3,9 @@ import logging
 import traceback
 from unittest import TestCase
 
-from gelfformatter.formatter import GELF_LEVELS, GelfFormatter, _prefix, chomp
 from mock import MagicMock, patch  # Python 2.7 support
+
+from gelfformatter.formatter import GELF_LEVELS, GelfFormatter, _prefix, chomp
 
 try:
     from StringIO import StringIO
