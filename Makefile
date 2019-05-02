@@ -5,6 +5,8 @@
 
 setup: ## Get development dependencies
 	pip install --upgrade pip setuptools pipenv
+	pipenv --python 3.7
+	pipenv shell
 	pipenv install
 
 .PHONY: clean-build
