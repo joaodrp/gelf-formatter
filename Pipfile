@@ -11,6 +11,7 @@ tox = "*"
 coverage = "*"
 twine = "*"
 mock = "*"
+codecov = "*"
 
 [packages]
 python-json-logger = "==0.1.11"
