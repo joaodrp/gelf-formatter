@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 from io import open
 
@@ -5,24 +7,24 @@ from setuptools import setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-about = {}
+version = {}
 with open(
-    os.path.join(here, "gelfformatter", "__version__.py"), "r", encoding="utf-8"
+    os.path.join(here, "gelfformatter", "version.py"), "r", encoding="utf-8"
 ) as f:
-    exec(f.read(), about)
+    exec(f.read(), version)
 
 with open("README.md", "r", encoding="utf-8") as f:
     readme = f.read()
 
 setup(
-    name=about["__title__"],
-    version=about["__version__"],
-    description=about["__description__"],
+    name="gelf-formatter",
+    version=version["__version__"],
+    description="GELF formatter for the standard Python logging module.",
     long_description=readme,
     long_description_content_type="text/markdown",
-    author=about["__author__"],
-    url=about["__url__"],
-    license=about["__license__"],
+    author="João Pereira",
+    url="https://github.com/joaodrp/gelf-formatter",
+    license="MIT",
     keywords=["gelf", "graylog", "logger", "logging", "log", "json"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -42,7 +44,7 @@ setup(
     packages=["gelfformatter"],
     include_package_data=True,
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
-    install_requires=["python-json-logger>=0.1.11,<1.0.0"],
+    install_requires=["python-json-logger==0.1.11"],
     tests_require=["mock>=2.0.0"],
     test_suite="tests",
 )
