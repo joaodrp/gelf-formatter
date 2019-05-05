@@ -5,7 +5,6 @@ install: make setup
 stages:
   - lint
   - test
-  - coverage
 jobs:
   include:
     - stage: lint
@@ -23,7 +22,5 @@ jobs:
       script: make test
     - stage: test
       python: '3.7'
-      script: make test
-    - stage: coverage
-      python: '3.7'
-      script: codecov
+      script: make coverage
+      after_success: codecov
