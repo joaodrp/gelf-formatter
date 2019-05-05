@@ -2,12 +2,9 @@
 .DEFAULT_GOAL := help
 
 .PHONY: setup
-
 setup: ## Get development dependencies
-	pip install --upgrade pip setuptools pipenv
-	pipenv --python 3.7
-	pipenv shell
-	pipenv install
+	pip install pipenv --upgrade
+	pipenv install --dev
 
 .PHONY: clean-build
 clean-build:
@@ -32,15 +29,6 @@ clean-test:
 .PHONY: clean
 clean: clean-build clean-pyc clean-test ## Remove object and cache files
 
-.PHONY: dist
-dist: clean ## Package
-	pipenv run python setup.py sdist bdist_wheel
-	ls -l dist
-
-.PHONY: publish
-publish: clean ## Publish package
-	pipenv run twine upload dist/*
-
 .PHONY: lint
 lint: ## Run linters
 	pipenv run flake8
@@ -58,10 +46,22 @@ test-all: ## Run all tests
 coverage: ## Generate test coverage report
 	pipenv run coverage run -m --branch unittest discover -v
 	pipenv run coverage report -m --include='gelfformatter/*'
+
+.PHONY: coverage-html
+coverage-html: coverage ## Generate HTML test coverage report
 	pipenv run coverage html
 
 .PHONY: ci
-ci: coverage lint ## Run all tests and code checks
+ci: lint coverage ## Run all tests and code checks
+
+.PHONY: dist
+dist: clean ## Package
+	pipenv run python setup.py sdist bdist_wheel
+	ls -l dist
+
+.PHONY: publish
+publish: dist ## Publish package
+	pipenv run twine upload dist/*
 
 .PHONY: help
 help: ## Display this help
