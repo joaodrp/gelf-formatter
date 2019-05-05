@@ -5,6 +5,8 @@ install: make setup
 stages:
   - lint
   - test
+  - name: publish
+    if: (tag =~ ^v) AND (branch = master)
 jobs:
   include:
     - stage: lint
@@ -24,3 +26,6 @@ jobs:
       python: '3.7'
       script: make coverage
       after_success: codecov
+    - stage: publish
+      python: '3.7'
+      script: make publish
