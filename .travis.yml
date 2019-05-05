@@ -1,13 +1,29 @@
 dist: xenial
 language: python
-python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
-  - "3.7"
 cache: pip
 install: make setup
-script: make ci
-after_success: if [[ $TRAVIS_PYTHON_VERSION == '3.7' ]]; then codecov; fi
-notifications:
-  email: false
+stages:
+  - lint
+  - test
+  - coverage
+jobs:
+  include:
+    - stage: lint
+      before_script: pip install black
+      script: make lint
+      python: '3.7'
+    - stage: test
+      python: '2.7'
+      script: make test
+    - stage: test
+      python: '3.5'
+      script: make test
+    - stage: test
+      python: '3.6'
+      script: make test
+    - stage: test
+      python: '3.7'
+      script: make test
+    - stage: coverage
+      python: '3.7'
+      script: codecov
