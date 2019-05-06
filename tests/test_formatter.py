@@ -3,9 +3,8 @@ import logging
 import traceback
 from unittest import TestCase
 
+from gelfformatter.formatter import GELF_LEVELS, GelfFormatter, _prefix
 from mock import MagicMock, patch  # Python 2.7 support
-
-from gelfformatter.formatter import GELF_LEVELS, GelfFormatter, _prefix, chomp
 
 try:
     from StringIO import StringIO
@@ -16,6 +15,14 @@ except ImportError:
 TIME = 1556565019.768748
 HOST = "server-x"
 MSG = "test message"
+
+
+def chomp(x):
+    if x.endswith("\r\n"):
+        return x[:-2]
+    if x.endswith("\n") or x.endswith("\r"):
+        return x[:-1]
+    return x
 
 
 @patch("time.time", MagicMock(return_value=TIME))
