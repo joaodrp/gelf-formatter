@@ -21,7 +21,7 @@ Start by [forking this repository](https://help.github.com/en/articles/fork-a-re
 
 The name of your branch should follow this syntax:
 
-``` sh
+```
 [fix|feature]/<issue number>-<short-description>
 ```
 
@@ -38,13 +38,13 @@ Prerequisites:
 
 Install development dependencies:
 
-``` sh
+```
 $ make setup
 ```
 
 Run the test suite to make sure everything is properly setup:
 
-``` sh
+```
 $ make test
 ```
 
@@ -52,7 +52,7 @@ $ make test
 
 Make your changes and run the test suite and linters:
 
-``` sh
+```
 $ make ci
 ```
 
