@@ -13,7 +13,6 @@ mock = "*"
 codecov = "*"
 
 [packages]
-python-json-logger = "==0.1.11"
 
 [requires]
 python_version = "3.7"

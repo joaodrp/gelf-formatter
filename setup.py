@@ -19,7 +19,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 setup(
     name="gelf-formatter",
     version=version["__version__"],
-    description="GELF formatter for the standard Python logging module.",
+    description="GELF formatter for the Python standard library logging module.",
     long_description=readme,
     long_description_content_type="text/markdown",
     author="João Pereira",
@@ -44,7 +44,6 @@ setup(
     packages=["gelfformatter"],
     include_package_data=True,
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
-    install_requires=["python-json-logger==0.1.11"],
     tests_require=["mock>=2.0.0"],
     test_suite="tests",
 )

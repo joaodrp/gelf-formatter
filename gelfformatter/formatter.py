@@ -1,10 +1,8 @@
 """Logging formatter for Graylog Extended Log Format (GELF)"""
 
+import json
 import logging
 import socket
-import traceback
-
-from pythonjsonlogger.jsonlogger import RESERVED_ATTRS, JsonFormatter
 
 # GELF specification version.
 GELF_VERSION = "1.1"
@@ -22,6 +20,34 @@ GELF_LEVELS = {
 GELF_IGNORED_ATTRS = ["id"]
 
 
+# The `logging.LogRecord` attributes that should be ignored by default.
+# http://docs.python.org/library/logging.html#logrecord-attributes
+RESERVED_ATTRS = (
+    "args",
+    "asctime",
+    "created",
+    "exc_info",
+    "exc_text",
+    "filename",
+    "funcName",
+    "levelname",
+    "levelno",
+    "lineno",
+    "module",
+    "msecs",
+    "message",
+    "msg",
+    "name",
+    "pathname",
+    "process",
+    "processName",
+    "relativeCreated",
+    "stack_info",
+    "thread",
+    "threadName",
+)
+
+
 def _prefix(str):
     return str if str.startswith("_") else "_%s" % str
 
@@ -34,11 +60,13 @@ def chomp(x):
     return x
 
 
-class GelfFormatter(JsonFormatter):
+class GelfFormatter(logging.Formatter):
     """
     A custom logging formatter for GELF.
 
-    Extend `JsonFormatter`.
+    .. seealso::
+    https://docs.python.org/3/library/logging.html#logging.Formatter
+    http://docs.graylog.org/en/3.0/pages/gelf.html#gelf-payload-specification
     """
 
     def __init__(self, logrecord_add_fields=None, extra_add_fields=None):
@@ -59,24 +87,17 @@ class GelfFormatter(JsonFormatter):
         self.extra_add_fields = extra_add_fields
         self.hostname = socket.gethostname()
 
-    def add_fields(self, log_record, record, message_dict):
-        """
-        Overrides `JsonFormatter.add_fields` to transform log records according to the
-        GELF 1.1 specification.
+    def format(self, record):
+        """Formats a log record according to the GELF specification.
 
-        :param log_record: The output log record
-        :type log_record: OrderedDict
-        :param record: The input log record
+        :param record: The original log record
         :type record: logging.LogRecord
-        :param message_dict: Additional fields (not used, ignore)
-        :type message_dict: dict
 
         .. seealso::
-            http://docs.graylog.org/en/3.0/pages/gelf.html#gelf-payload-specification
+        https://docs.python.org/3/library/logging.html#logging.Formatter.format
         """
-
         # Base GELF message structure
-        log_record.update(
+        log_record = dict(
             version=GELF_VERSION,
             short_message=record.getMessage(),
             timestamp=record.created,
@@ -86,9 +107,7 @@ class GelfFormatter(JsonFormatter):
 
         # Capture exception info, if any
         if record.exc_info is not None:
-            log_record["full_message"] = "\n".join(
-                map(chomp, traceback.format_exception(*record.exc_info))
-            )
+            log_record["full_message"] = self.formatException(record.exc_info)
 
         record_dict = record.__dict__
 
@@ -108,3 +127,5 @@ class GelfFormatter(JsonFormatter):
         for key, value in record_dict.items():
             if key not in RESERVED_ATTRS and key not in GELF_IGNORED_ATTRS:
                 log_record[_prefix(key)] = value
+
+        return json.dumps(log_record)
