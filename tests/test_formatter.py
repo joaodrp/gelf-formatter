@@ -3,8 +3,9 @@ import logging
 import traceback
 from unittest import TestCase
 
-from gelfformatter.formatter import GELF_LEVELS, GelfFormatter, _prefix
 from mock import MagicMock, patch  # Python 2.7 support
+
+from gelfformatter.formatter import GELF_LEVELS, GelfFormatter, _prefix
 
 try:
     from StringIO import StringIO
@@ -125,7 +126,7 @@ class TestGelfFormatter(TestCase):
 
     def testLogRecordAddFields(self):
         formatter = GelfFormatter(
-            logrecord_add_fields={
+            reserved_fields={
                 "filename": "file",
                 "funcName": "func_name",
                 "levelname": "level_name",
@@ -157,7 +158,7 @@ class TestGelfFormatter(TestCase):
 
     def testExtraAddFields(self):
         formatter = GelfFormatter(
-            extra_add_fields={
+            custom_fields={
                 "app": "my-app",
                 "environment": "development",
                 "id": "this should be ignored",
@@ -186,8 +187,3 @@ class TestUtilityMethods(TestCase):
     def testUnderscorePrefix(self):
         self.assertEqual(_prefix("foo"), "_foo")
         self.assertEqual(_prefix("_foo"), "_foo")
-
-    def testChomp(self):
-        self.assertEqual(chomp("foo\r\n"), "foo")
-        self.assertEqual(chomp("foo\n"), "foo")
-        self.assertEqual(chomp("foo"), "foo")
