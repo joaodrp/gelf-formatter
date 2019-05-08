@@ -1,193 +1,206 @@
-<h1 align="center" style="border-bottom: none;">gelf-pretty</h1>
-<h3 align="center">CLI to pretty-print GELF log lines</h3>
-<p align="center">
-    <a href="https://github.com/joaodrp/gelf-pretty/releases/latest">
-        <img alt="Release" src="https://img.shields.io/github/release/joaodrp/gelf-pretty.svg">
-    </a>
-    <a href="https://travis-ci.com/joaodrp/gelf-pretty">
-        <img alt="Travis" src="https://img.shields.io/travis/com/joaodrp/gelf-pretty.svg">
-    </a>
-    <a href="https://codecov.io/gh/joaodrp/gelf-pretty">
-        <img alt="Codecov"
-            src="https://img.shields.io/codecov/c/github/joaodrp/gelf-pretty/master.svg">
-    </a>
-    <a href="https://goreportcard.com/report/github.com/joaodrp/gelf-pretty">
-        <img alt="Go Report" src="https://goreportcard.com/badge/github.com/joaodrp/gelf-pretty">
-    </a>
-    <a href="https://semver.org/">
-        <img alt="SemVer" src="https://img.shields.io/badge/semver-2.0.0-blue.svg">
-    </a>
-    <a href="https://conventionalcommits.org">
-        <img alt="Conventional Commits"
-            src="https://img.shields.io/badge/conventional%20commits-1.0.0-yellow.svg">
-    </a>
-    <a href="LICENSE">
-        <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg">
-    </a>
-    <a href="https://saythanks.io/to/joaodrp">
-        <img alt="SayThanks.io" src="https://img.shields.io/badge/say%20thanks-%E2%98%BC-1EAEDB.svg">
-    </a>
-</p>
+[![Release](https://img.shields.io/github/release/joaodrp/gelf-formatter.svg)](https://github.com/joaodrp/gelf-formatter/releases/latest)
+[![PyPI](https://img.shields.io/pypi/v/gelf-formatter.svg)](https://pypi.org/project/gelf-formatter/)
+[![Python versions](https://img.shields.io/pypi/pyversions/gelf-formatter.svg)](https://pypi.org/project/gelf-formatter/)
+[![Travis](https://img.shields.io/travis/com/joaodrp/gelf-formatter.svg)](https://travis-ci.com/joaodrp/gelf-formatter)
+[![Codecov](https://codecov.io/github/joaodrp/gelf-formatter/coverage.svg?branch=master)](https://codecov.io/github/joaodrp/gelf-formatter)
+[![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
+[![SemVer](https://img.shields.io/badge/semver-2.0.0-blue.svg)](https://semver.org/)
+[![Conventional Commits](https://img.shields.io/badge/conventional%20commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
+[![Code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+[![Downloads](https://pepy.tech/badge/gelf-formatter)](https://pepy.tech/project/gelf-formatter)
+[![Contributors](https://img.shields.io/github/contributors/joaodrp/gelf-formatter.svg)](https://github.com/joaodrp/gelf-formatter/graphs/contributors)
+[![SayThanks](https://img.shields.io/badge/say%20thanks-%E2%98%BC-1EAEDB.svg)](https://saythanks.io/to/joaodrp)
 
----
+# GELF Formatter
 
-## Introduction
+[Graylog Extended Log Format (GELF)](http://docs.graylog.org/en/latest/pages/gelf.html) formatter for the Python standard library [logging](https://docs.python.org/3/library/logging.html) module.
 
-CLI tool to read <a href="http://docs.graylog.org/en/latest/pages/gelf.html">Graylog
-Extended Log Format (GELF)</a> log lines from `stdin`, such as:
+## Motivation
 
-```text
-{"version":"1.1","host":"my-server","short_message":"Starting server","timestamp":1555690413.839,"level":6,"_app":"my-app","_logger":"api","_port":"3000"}
-{"version":"1.1","host":"my-server","short_message":"Listening for requests","timestamp":1555690413.903,"level":6,"_app":"my-app","_logger":"api","_endpoint":"locahost:3000/v1"}
-{"version":"1.1","host":"my-server","short_message":"Request received","timestamp":155569049.540,"level":6,"_app":"my-app","_logger":"api","_method":"GET","_path":"/todos/1","_request_id":"0c4c165d"}
-{"version":"1.1","host":"my-server","short_message":"Response","full_message":"{\n\t\"user_id\": 1,\n\t\"id\": 1,\n\t\"title\": \"fix /users/:id/todos route\",\n\t\"completed\": false\n}","timestamp":155569049.584,"level":7,"_app":"my-app","_logger":"api","_request_id":"0c4c165d","_status":200}
-{"version":"1.1","host":"my-server","short_message":"Request received","timestamp":155569349.236,"level":6,"_app":"my-app","_logger":"api","_method":"GET","_path":"/users/1/todos","_request_id":"0c4c165d"}
-{"version":"1.1","host":"my-server","short_message":"Unexpected error","full_message":"runtime error: index out of range\ngoroutine 1 [running]:\nmain.main()\n\t/app/api/main.go: 9 +0x20","timestamp":155569349.563,"level":3,"_app":"my-app","_logger":"api","_request_id":"0c4c165d"}
-{"version":"1.1","host":"my-server","short_message":"Server shutting down","timestamp":155569349.571,"level":4,"_app":"my-app","_logger":"api"}
-```
+There are several packages available that implement *handlers* for the standard library logging module and can send your application logs to [Graylog](https://www.graylog.org/) by TCP/UDP/HTTP ([py-gelf](https://pypi.org/project/pygelf/) is a good example). Although these can be useful, it may not be a good idea to make your application performance dependent on costly network requests.
 
-And pretty-print them to `stdout` like:
+Alternatively, you can simply log to a file or `stdout` and have a log collector (like [Fluentd](https://www.fluentd.org/)) processing and sending those logs *asynchronously* to a remote server (and not just to Graylog, as GELF can be used as a generic log format). This has become a common pattern for containerized applications and in such scenario all we need is a GELF logging formatter, nothing else.
 
-![Demo](https://user-images.githubusercontent.com/484633/56434633-4eb7d900-62cd-11e9-8ff5-27d6f4931f7a.png)
+For these reasons this package was created and contains a *formatter* for the standard library logging module that conforms to the [GELF Payload Specification (version 1.1)](http://docs.graylog.org/en/3.0/pages/gelf.html#gelf-payload-specification). You can use it locally or apply it globally to capture logs from third-party packages as well.
+
+## Features
+
+- Support for custom fixed additional fields (context);
+- Support for reserved [`logging.LogRecord`](https://docs.python.org/3/library/logging.html#logrecord-attributes) additional fields;
+- Automatic exceptions detection and formatting (traceback);
+- Zero dependencies and tiny footprint.
 
 ## Installation
 
-You can install `gelf-pretty` using one of the following options:
- 
-- Pre-built packages for macOS and Linux (easiest);
-- Pre-compiled binaries for macOS, Linux and Windows;
-- From source.
+### With pip
 
-### Pre-built packages
-#### macOS
-
-Install via [Homebrew](https://brew.sh/):
-
-```bash
-$ brew install joaodrp/tap/gelf-pretty
+```text
+$ pip install gelf-formatter
 ```
-
-#### Linux
-
-Install via [Snapcraft](https://snapcraft.io/gelf-pretty): 
-
-```bash
-$ snap install gelf-pretty
-```
-
-You can also download `.deb` or `.rpm` packages from the [releases
-page](https://github.com/joaodrp/gelf-pretty/releases) and install with `dpkg
--i` or `rpm -i` respectively.
-
-### Pre-compiled binaries
-
-Download the correct archive for your platform from the [releases
-page](https://github.com/joaodrp/gelf-pretty/releases) and extract the
-`gelf-pretty` binary to a directory included in your `$PATH`/`Path`.
 
 ### From source
 
-```bash
-$ go get -u github.com/joaodrp/gelf-pretty
-```
-Make sure that the `$GOPATH/bin` folder is in your `$PATH`.
-
-## Output Format
-
-GELF messages are pretty-printed in the following format:
-
 ```text
-[<timestamp>] <level>: <_app>/<_logger> on <host>: <short_message> <_*>=<value>\n
-    <full_message>
+$ python setup.py install
 ```
-
-### Description
-- `<timestamp>` is the value of the standard GELF unix `timestamp` field,
-  formatted as `2006-01-02 15:04:05.000`;
-
-- `<level>` is the value of the standard GELF log `level` field, formatted in a
-  human-readable form (e.g. `DEBUG` instead of `7`);
-
-- `<_app>` is an optional *reserved* additional field. It can be used to
-  identify the name of the application emitting the logs. If not provided, the
-  forward slash that follows it is omitted;
-
-- `<_logger>` is an optional *reserved* additional field. It can be used to
-  identify the specific application module or logger instance that is emitting a
-  given log line;
-
-- `<host>` is the value of the standard GELF `host` field;
-
-- `<short_message>` is the value of the standard GELF `short_message` field;
-
-- `<_*>=<value>` is any number of GELF additional fields (`_*`), formatted as
-  `key=value` pairs separated by a whitespace. The keys leading underscore is
-  omitted for readability;
-
-- `<full_message>` is the value of the standard GELF `full_message` field
-  (usually used for exception backtraces). It is preceded by a new line and
-  indented with four spaces.
-
-### Colors
-
-`gelf-pretty` automatically detects if the output stream is a `TTY` or not. If
-(and only if) it is, the output will be formatted by default with ANSI colors
-for improved readability.
 
 ## Usage
 
-To pretty-print GELF logs from your application simply pipe its output to
-`gelf-pretty`:
+Simply create a `gelfformatter.GelfFormatter` instance and pass it as argument to [`logging.Handler.setFormatter`](https://docs.python.org/3/library/logging.html#logging.Handler.setFormatter):
 
-```bash
-$ app | gelf-pretty
+```py
+import sys
+import logging
+
+from gelfformatter import GelfFormatter
+
+formatter = GelfFormatter()
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(formatter)
 ```
 
-Run `gelf-pretty --help` for a list of available options:
+Apply it globally with [`logging.basicConfig`](https://docs.python.org/3/library/logging.html#logging.basicConfig) to format log records from third-party packages as well:
 
-```bash
-$ gelf-pretty --help
-Usage of gelf-pretty:
-  --no-color
-        Disable color output
-  --version
-        Show version information
+```py
+logging.basicConfig(level=logging.DEBUG, handlers=[handler])
 ```
 
-### Capture stderr
+Alternatively, you can configure a local [`logging.Logger`](https://docs.python.org/3/library/logging.html#logging.Logger) instance with [`logging.Logger.addHandler`](https://docs.python.org/3/library/logging.html#logging.Logger.addHandler).
 
-If your application writes to the `stderr` stream you will need to pipe it along
-with `stdout`:
+That's it. You can now use the logging module as usual and all log records will be formatted as GELF messages.
 
-```bash
-$ app 2>&1 | gelf-pretty
+### Standard Fields
+
+The formatter will output all (non-deprecated) fields described in the [GELF Payload Specification (version 1.1)](http://docs.graylog.org/en/latest/pages/gelf.html#gelf-payload-specification):
+
+- `version`: String, always set to `1.1`;
+
+- `host`: String, output of [`socket.gethostname`](https://docs.python.org/3/library/socket.html#socket.gethostname);
+- `short_message`: String, log record message;
+- `full_message` (*optional*): String, formatted traceback of an exception;
+- `timestamp`: Number, millisecond precision epoch log timestamp;
+- `level`: Integer, *syslog* severity level corresponding to the Python logging level.
+
+None of these fields can be manually ignored or override.
+
+#### Example
+
+```py
+logging.info("Some message")
 ```
 
-### Disable colors
-
-To disable colored output (even if the output stream is a `TTY`) use the
-`--no-color` option:
-
-```bash
-$ app | gelf-pretty --no-color
+```text
+{"version":"1.1","host":"my-server","short_message":"Some message","timestamp":1557342545.1067393,"level":6}
 ```
 
-## FAQ
+### Exceptions
 
-### My logs are not formatted, why?
+The `full_message` fields is used to store the traceback of exceptions. You just need to log them with [`logging.exception`](https://docs.python.org/3/library/logging.html#logging.exception).
 
-`gelf-pretty` validates each input line. If a line (delimited by `\n`) is not a
-valid JSON string or is invalid according to the [GELF
-specification](http://docs.graylog.org/en/latest/pages/gelf.html#gelf-payload-specification),
-`gelf-pretty` will simply echo it back to the `stdout` without any modification
-(silently, with no error messages).
+#### Example
 
-If you believe that your log messages are valid, please [open a new
-issue](https://github.com/joaodrp/gelf-pretty/issues/new) and let us know.
+```py
+import urllib.request
+
+req = urllib.request.Request('http://www.pythonnn.org')
+try:
+    urllib.request.urlopen(req)
+except urllib.error.URLError as e:
+    logging.exception(e.reason)
+```
+
+```text
+{"version": "1.1", "short_message": "[Errno -2] Name or service not known", "timestamp": 1557342714.0695107, "level": 3, "host": "my-server", "full_message": "Traceback (most recent call last):\n  ...(truncated)... raise URLError(err)\nurllib.error.URLError: <urlopen error [Errno -2] Name or service not known>"}
+```
+
+### Additional Fields
+
+The GELF specification allows any number of arbitrary additional fields, with keys prefixed with an underscore.
+
+To log additional fields simply pass an object using the `extra` keyword. Keys will be automatically prefixed with an underscore (if not already).
+
+#### Example
+
+```py
+logging.info("request received", extra={"path": "/orders/1", "method": "GET"})
+```
+
+```text
+{"version": "1.1", "short_message": "request received", "timestamp": 1557343604.5892842, "level": 6, "host": "my-server", "_path": "/orders/1", "_method": "GET"}
+```
+
+#### Fixed (Context) Fields
+
+It's possible to tell the formatter to included a predefined set of additional fields in all log messages. This is useful to avoid repeated arbitrary fields and facilitate contextual logging.
+
+To do so, simply pass the a `dict` of fixed additional fields as `custom_fields` when initializing a `GelfFormatter`, or modify the `custom_fields` instance variable directly anytime.
+
+##### Example
+
+```py
+fields = {"app": "my-app", "version": "1.0.1"}
+
+formatter = GelfFormatter(custom_fields = fields)
+# or
+formatter.custom_fields = fields
+
+logging.debug("starting application...")
+```
+
+```text
+{"version": "1.1", "short_message": "starting application...", "timestamp": 1557344270.2869651, "level": 6, "host": "my-server", "_app": "my-app", "_version": "1.0.1"}
+```
+
+#### Reserved Fields
+
+It's possible to include any of the [`logging.LogRecord`](https://docs.python.org/3/library/logging.html#logrecord-attributes) attributes as additional fields in all log messages. This can be used to display useful information like the current module and filename, line number, etc.
+
+To do so, simply pass a `dict` as `reserved_fields` when initializing a `GelfFormatter`, or modify the `reserved_fields` instance variable directly anytime. Keys must be the name of a `LogRecord` attribute and values must be the corresponding name to be used to display it as an additional fields.
+
+##### Example
+
+```py
+fields = {"lineno": "line", "module": "module", "filename": "file"}
+
+formatter = GelfFormatter(reserved_fields = fields)
+# or
+formatter.reserved_fields = fields
+
+logging.debug("starting application...")
+```
+
+```text
+{"version": "1.1", "short_message": "starting application...", "timestamp": 1557346554.989846, "level": 6, "host": "my-server", "_line": 175, "_module": "myapp", "_file": "app.py"}
+```
+
+
+## Pretty-Print
+
+Looking for a GELF log pretty-printer? If so, have a look at [gelf-pretty](https://github.com/joaodrp/gelf-pretty).
 
 ## Contributions
 
-This project adheres to the Contributor Covenant [code of
-conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this
-code. Please refer to our [contributing guide](CONTRIBUTING.md) for further
-information.
+This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please refer to our [contributing guide](CONTRIBUTING.md) for further information.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
