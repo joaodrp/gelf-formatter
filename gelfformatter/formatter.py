@@ -79,11 +79,8 @@ class GelfFormatter(logging.Formatter):
     to the GELF specification.
 
     Attributes:
-        reserved_fields: A dict of reserved `logging.LogRecord`_ attributes that will be
-            included in all log messages.
-
-        custom_fields: A dict of arbitrary custom additional attributes that will be
-            included in all log messages.
+        allowed_reserved_attrs: A list of reserved `logging.LogRecord`_ attributes that
+        should not be ignored but rather included as additional fields.
 
     .. _logging.Formatter:
        https://docs.python.org/3/library/logging.html#logging.Formatter
@@ -92,24 +89,10 @@ class GelfFormatter(logging.Formatter):
        https://docs.python.org/3/library/logging.html#logrecord-attributes
     """
 
-    def __init__(self, reserved_fields=None, custom_fields=None):
-        """Initializes a GelfFormatter.
-
-        Args:
-            reserved_fields (Optional[dict]): A dict of reserved `logging.LogRecord`_
-                attributes that should be included in all log messages (by default these
-                attributes are excluded from the output). Keys should be the name of a
-                `logging.LogRecord`_ attribute (listed in ``RESERVED_ATTRS`` and values
-                should be the custom name to give to that additional attribute.
-            custom_fields (Optional[dict]): A dict of arbitrary custom additional
-                attributes that should be included in all log messages.
-
-        .. _logging.LogRecord:
-        https://docs.python.org/3/library/logging.html#logrecord-attributes
-        """
+    def __init__(self, allowed_reserved_attrs=[]):
+        """Initializes a GelfFormatter."""
         super(GelfFormatter, self).__init__()
-        self.reserved_fields = reserved_fields
-        self.custom_fields = custom_fields
+        self.allowed_reserved_attrs = allowed_reserved_attrs
         self._hostname = socket.gethostname()
 
     def format(self, record):
@@ -118,11 +101,11 @@ class GelfFormatter(logging.Formatter):
         Overrides `logging.Formatter.format`_.
 
         Args:
-            record (logging.LogRecord): The original log record that should be converted
-                and serialized to a GELF log message.
+            record (logging.LogRecord): The original log record that should be formatted
+                as a GELF log message.
 
         Returns:
-            str: The serialized GELF log message.
+            str: The serialized JSON GELF log message.
 
         .. _logging.Formatter.format:
            https://docs.python.org/3/library/logging.html#logging.Formatter.format
@@ -140,23 +123,10 @@ class GelfFormatter(logging.Formatter):
         if record.exc_info is not None:
             log_record["full_message"] = self.formatException(record.exc_info)
 
-        record_dict = record.__dict__
-
-        # Add `logging.LogRecord` additional fields, if any
-        if self.reserved_fields:
-            for key, value in self.reserved_fields.items():
-                if key in record_dict:
-                    log_record[_prefix(value)] = record_dict[key]
-
-        # Add extra additional fields, if any
-        if self.custom_fields:
-            for key, value in self.custom_fields.items():
-                if key not in GELF_IGNORED_ATTRS:
-                    log_record[_prefix(key)] = value
-
         # Everything else is considered an additional attribute
-        for key, value in record_dict.items():
-            if key not in RESERVED_ATTRS and key not in GELF_IGNORED_ATTRS:
+        exclude = [x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs]
+        for key, value in record.__dict__.items():
+            if key not in GELF_IGNORED_ATTRS and key not in exclude:
                 log_record[_prefix(key)] = value
 
         # Serialize as JSON

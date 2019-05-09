@@ -126,14 +126,7 @@ class TestGelfFormatter(TestCase):
 
     def testLogRecordAddFields(self):
         formatter = GelfFormatter(
-            reserved_fields={
-                "filename": "file",
-                "funcName": "func_name",
-                "levelname": "level_name",
-                "module": "module",
-                "name": "name",
-                "does_not_exists": "foo",
-            }
+            allowed_reserved_attrs=["module", "filename", "this should be ignored"]
         )
         self.log_handler.setFormatter(formatter)
 
@@ -148,37 +141,8 @@ class TestGelfFormatter(TestCase):
                 "timestamp": TIME,
                 "host": HOST,
                 "level": 6,
-                "_file": "test_formatter.py",
-                "_func_name": "testLogRecordAddFields",
-                "_level_name": "INFO",
+                "_filename": "test_formatter.py",
                 "_module": "test_formatter",
-                "_name": "test",
-            },
-        )
-
-    def testExtraAddFields(self):
-        formatter = GelfFormatter(
-            custom_fields={
-                "app": "my-app",
-                "environment": "development",
-                "id": "this should be ignored",
-            }
-        )
-        self.log_handler.setFormatter(formatter)
-
-        self.logger.info(MSG)
-
-        gelf = json.loads(self.buffer.getvalue())
-        self.assertEqual(
-            gelf,
-            {
-                "version": "1.1",
-                "short_message": MSG,
-                "timestamp": TIME,
-                "host": HOST,
-                "level": 6,
-                "_app": "my-app",
-                "_environment": "development",
             },
         )
 
