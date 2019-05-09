@@ -23,8 +23,8 @@ Alternatively, you can simply log to a file or `stdout` and have a collector (li
 
 ## Features
 
-- Support for custom additional fields (context);
-- Support for reserved [`logging.LogRecord`](https://docs.python.org/3/library/logging.html#logrecord-attributes) additional fields;
+- Support for arbitrary additional fields (through `extra`);
+- Support for including reserved [`logging.LogRecord`](https://docs.python.org/3/library/logging.html#logrecord-attributes) attributes as additional fields;
 - Automatic detection and formatting of exceptions (traceback);
 - Zero dependencies and tiny footprint.
 
@@ -128,50 +128,74 @@ logging.info("request received", extra={"path": "/orders/1", "method": "GET"})
 {"version": "1.1", "short_message": "request received", "timestamp": 1557343604.5892842, "level": 6, "host": "my-server", "_path": "/orders/1", "_method": "GET"}
 ```
 
-#### Fixed Fields (Context)
-
-It's possible to tell the formatter to included a predefined set of additional fields in all log messages. This is useful for repetitive additional fields and facilitates contextual logging.
-
-To do so, simply pass a `dict` of fixed additional fields as `custom_fields` when initializing a `GelfFormatter`, or modify the `custom_fields` instance variable directly.
-
-##### Example
-
-```py
-fields = {"app": "my-app", "version": "1.0.1"}
-
-formatter = GelfFormatter(custom_fields=fields)
-# or
-formatter.custom_fields = fields
-
-logging.debug("starting application...")
-```
-
-```text
-{"version": "1.1", "short_message": "starting application...", "timestamp": 1557344270.2869651, "level": 6, "host": "my-server", "_app": "my-app", "_version": "1.0.1"}
-```
-
 #### Reserved Fields
 
-It's possible to include any of the [`logging.LogRecord` attributes](https://docs.python.org/3/library/logging.html#logrecord-attributes) as additional fields in all log messages. This can be used to include useful information like the current module and filename, line number, etc.
+By default the formatter ignores all [`logging.LogRecord` attributes](https://docs.python.org/3/library/logging.html#logrecord-attributes). You can however opt to have them automatically included as additional fields in all log messages. This can be used to display useful information like the current module, filename, line number, etc.
 
-To do so, simply pass a `dict` as `reserved_fields` when initializing a `GelfFormatter`, or modify the `reserved_fields` instance variable directly. Keys must be the name of a `LogRecord` attribute and values must be the name to use for that additional field.
+To do so, simply pass a `list` with the name of the the `LogRecord` attributes to include as value of the `allowed_reserved_attrs` keyword when initializing a `GelfFormatter` (or modify the corresponding instance variable directly). 
 
 ##### Example
 
 ```py
-fields = {"lineno": "line", "module": "module", "filename": "file"}
+attrs = ["lineno", "module", "filename"]
 
-formatter = GelfFormatter(reserved_fields=fields)
+formatter = GelfFormatter(allowed_reserved_attrs=attrs)
 # or
-formatter.reserved_fields = fields
+formatter.allowed_reserved_attrs = attrs
 
 logging.debug("starting application...")
 ```
 
 ```text
-{"version": "1.1", "short_message": "starting application...", "timestamp": 1557346554.989846, "level": 6, "host": "my-server", "_line": 175, "_module": "myapp", "_file": "app.py"}
+{"version": "1.1", "short_message": "starting application...", "timestamp": 1557346554.989846, "level": 6, "host": "my-server", "_lineno": 175, "_module": "myapp", "_filename": "app.py"}
 ```
 
+You can optionally customize the name of these additional fields using a [`logging.Filter`](https://docs.python.org/3/library/logging.html#filter-objects) instead (see below for an example).
+
+#### Context Fields
+
+Having the ability to define a set of additional fields once and have them included as additional fields in all log messages can be useful to avoid repetitive `extra` key/value pairs and enable contextual logging.
+
+Python's logging module provides several options to add context to a logger, among which we highlight the  [`logging.LoggerAdapter`](https://docs.python.org/3/library/logging.html#loggeradapter-objects) and [`logging.Filter`](https://docs.python.org/3/library/logging.html#filter-objects).
+
+Between these we recommend the `logging.Filter`. Besides being simpler than a `LoggerAdapter`, it can be attached directly to a [`logging.Handler`](https://docs.python.org/3/library/logging.html#handler-objects), which makes it possible to use it for both custom logging instances and the global logging module (while a `LoggerAdapter` requires a logging instance to wrap).
+
+You can also use `logging.Filter` to reuse any of the reserved `logging.LogRecord` attributes.
+
+##### Example
+
+```py
+class ContextFilter(logging.Filter):
+    def filter(self, record):
+        # Add any number of arbitrary additional fields
+        record.app = "my-app"
+        record.app_version = "1.2.3"
+        record.environment = os.environ.get("APP_ENV")
+        
+        # Reuse any reserved `logging.LogRecord` attributes
+        record.file = record.filename
+        record.line = record.lineno
+        return True
+
+
+formatter = GelfFormatter()
+filter = ContextFilter()
+
+handler = logging.StreamHandler(sys.stdout)
+
+handler.setFormatter(formatter)
+handler.addFilter(filter)
+
+logging.basicConfig(level=logging.DEBUG, handlers=[handler])
+
+logging.info("hi", extra=dict(foo="bar"))
+```
+
+```text
+{"version": "1.1", "short_message": "hi", "timestamp": 1557431642.189755, "level": 6, "host": "my-server", "_foo": "bar", "_app": "my-app", "_app_version": "1.2.3", "_environment": "development", "_file": "formatter.py", "_line": 159}
+```
+
+#### 
 
 ## Pretty-Print
 
