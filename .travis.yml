@@ -6,7 +6,7 @@ stages:
   - lint
   - test
   - name: publish
-    if: (tag =~ ^v) AND (branch = master)
+    if: (tag IS present) AND (branch = master)
 jobs:
   include:
     - stage: lint
