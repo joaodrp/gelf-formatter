@@ -151,3 +151,8 @@ class TestUtilityMethods(TestCase):
     def testUnderscorePrefix(self):
         self.assertEqual(_prefix("foo"), "_foo")
         self.assertEqual(_prefix("_foo"), "_foo")
+
+    def testChomp(self):
+        self.assertEqual(chomp("foo\r\n"), "foo")
+        self.assertEqual(chomp("foo\n"), "foo")
+        self.assertEqual(chomp("foo"), "foo")
