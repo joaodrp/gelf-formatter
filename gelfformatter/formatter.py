@@ -89,11 +89,14 @@ class GelfFormatter(logging.Formatter):
        https://docs.python.org/3/library/logging.html#logrecord-attributes
     """
 
-    def __init__(self, allowed_reserved_attrs=[]):
+    def __init__(self, allowed_reserved_attrs=[], additional_reserved_attrs=[]):
         """Initializes a GelfFormatter."""
         super(GelfFormatter, self).__init__()
         self.allowed_reserved_attrs = allowed_reserved_attrs
         self._hostname = socket.gethostname()
+
+        self._reserved_attrs = [attr for attr in RESERVED_ATTRS if attr not in self.allowed_reserved_attrs]
+        self._reserved_attrs += additional_reserved_attrs
 
     def format(self, record):
         """Formats a log record according to the GELF specification.
@@ -124,9 +127,8 @@ class GelfFormatter(logging.Formatter):
             log_record["full_message"] = self.formatException(record.exc_info)
 
         # Everything else is considered an additional attribute
-        exclude = [x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs]
         for key, value in record.__dict__.items():
-            if key not in GELF_IGNORED_ATTRS and key not in exclude:
+            if key not in GELF_IGNORED_ATTRS and key not in self._reserved_attrs:
                 log_record[_prefix(key)] = value
 
         # Serialize as JSON
