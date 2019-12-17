@@ -95,7 +95,9 @@ class GelfFormatter(logging.Formatter):
         self.allowed_reserved_attrs = allowed_reserved_attrs
         self._hostname = socket.gethostname()
 
-        self._reserved_attrs = [attr for attr in RESERVED_ATTRS if attr not in self.allowed_reserved_attrs]
+        self._reserved_attrs = [
+            x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs
+        ]
         self._reserved_attrs += additional_reserved_attrs
 
     def format(self, record):
