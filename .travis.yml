@@ -23,6 +23,9 @@ jobs:
       python: '3.6'
       script: make test
     - stage: test
+      python: '3.8'
+      script: make test
+    - stage: test
       python: '3.7'
       script: make coverage
       after_success: codecov
