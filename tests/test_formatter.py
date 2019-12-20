@@ -147,7 +147,7 @@ class TestGelfFormatter(TestCase):
         )
 
     def testAdditionalReservedAttrs(self):
-        formatter = GelfFormatter(additional_reserved_attrs=["secret"])
+        formatter = GelfFormatter(ignored_attrs=["secret"])
         self.log_handler.setFormatter(formatter)
 
         self.logger.info(MSG, extra={"allowed": "it is", "secret": "denied"})

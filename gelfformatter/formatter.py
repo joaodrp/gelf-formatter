@@ -82,6 +82,9 @@ class GelfFormatter(logging.Formatter):
         allowed_reserved_attrs: A list of reserved `logging.LogRecord`_ attributes that
         should not be ignored but rather included as additional fields.
 
+        ignored_attrs: A list of additional `logging.LogRecord`_ attributes that will be
+        ignored in addition to the reserved fields and not be present in the ouput.
+
     .. _logging.Formatter:
        https://docs.python.org/3/library/logging.html#logging.Formatter
 
@@ -89,16 +92,12 @@ class GelfFormatter(logging.Formatter):
        https://docs.python.org/3/library/logging.html#logrecord-attributes
     """
 
-    def __init__(self, allowed_reserved_attrs=[], additional_reserved_attrs=[]):
+    def __init__(self, allowed_reserved_attrs=[], ignored_attrs=[]):
         """Initializes a GelfFormatter."""
         super(GelfFormatter, self).__init__()
         self.allowed_reserved_attrs = allowed_reserved_attrs
+        self.ignored_attrs = ignored_attrs
         self._hostname = socket.gethostname()
-
-        self._reserved_attrs = [
-            x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs
-        ]
-        self._reserved_attrs += additional_reserved_attrs
 
     def format(self, record):
         """Formats a log record according to the GELF specification.
@@ -128,9 +127,15 @@ class GelfFormatter(logging.Formatter):
         if record.exc_info is not None:
             log_record["full_message"] = self.formatException(record.exc_info)
 
+        # Compute excluded attributes
+        excluded_attrs = [
+            x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs
+        ]
+        excluded_attrs += self.ignored_attrs
+
         # Everything else is considered an additional attribute
         for key, value in record.__dict__.items():
-            if key not in GELF_IGNORED_ATTRS and key not in self._reserved_attrs:
+            if key not in GELF_IGNORED_ATTRS and key not in excluded_attrs:
                 log_record[_prefix(key)] = value
 
         # Serialize as JSON
