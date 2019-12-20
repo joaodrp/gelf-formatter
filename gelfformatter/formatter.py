@@ -82,8 +82,9 @@ class GelfFormatter(logging.Formatter):
         allowed_reserved_attrs: A list of reserved `logging.LogRecord`_ attributes that
         should not be ignored but rather included as additional fields.
 
-        ignored_attrs: A list of additional `logging.LogRecord`_ attributes that will be
-        ignored in addition to the reserved fields and not be present in the ouput.
+        ignored_attrs: A list of additional attributes passed to a `logging.LogRecord`_ via
+        the `extra` keyword that will be ignored in addition to the reserved fields
+        and not be present in the ouput.
 
     .. _logging.Formatter:
        https://docs.python.org/3/library/logging.html#logging.Formatter
