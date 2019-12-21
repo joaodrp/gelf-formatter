@@ -185,6 +185,29 @@ logging.debug("starting application...")
 
 You can optionally customize the name of these additional fields using a [`logging.Filter`](https://docs.python.org/3/library/logging.html#filter-objects) (see below).
 
+Similarily, you can choose to ignore additional attributes passed via the `extra` keyword argument. This can be usefull to e.g. not log keywords named `secret` or `password`.
+
+To do so, pass a list of names to the `ignored_attrs` keyword when initializing a `GelfFormatter`. You can also modify the `ignored_attrs` instance variable of an already initialized formatter.
+
+##### Example
+
+But be aware: nested fields will be printed! Only the root level of keywords is filtered by the `ignored_attrs`.
+
+```python
+attrs = ["secret", "password"]
+
+formatter = GelfFormatter(ignored_attrs=attrs)
+# or
+formatter.ignored_attrs = attrs
+
+logging.debug("app config", extra={"connection": "local", "secret": "verySecret!", "mysql": {"user": "test", "password": "will_be_logged"}})
+```
+
+```text
+{"version": "1.1", "short_message": "app config", "timestamp": 1557346554.989846, "level": 6, "host": "my-server", "_connection": "local", "_mysql": {"user": "test", "password": "will_be_logged"}}
+```
+
+
 #### Context Fields
 
 Having the ability to define a set of additional fields once and have them included in all log messages can be useful to avoid repetitive `extra` key/value pairs and enable contextual logging.

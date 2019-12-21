@@ -161,6 +161,25 @@ class TestGelfFormatter(TestCase):
             },
         )
 
+    def testAdditionalReservedAttrs(self):
+        formatter = GelfFormatter(ignored_attrs=["secret"])
+        self.log_handler.setFormatter(formatter)
+
+        self.logger.info(MSG, extra={"allowed": "it is", "secret": "denied"})
+
+        gelf = json.loads(self.buffer.getvalue())
+        self.assertEqual(
+            gelf,
+            {
+                "version": "1.1",
+                "short_message": MSG,
+                "timestamp": TIME,
+                "host": HOST,
+                "level": 6,
+                "_allowed": "it is",
+            },
+        )
+
 
 class TestUtilityMethods(TestCase):
     def testUnderscorePrefix(self):

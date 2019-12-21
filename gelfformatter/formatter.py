@@ -82,6 +82,10 @@ class GelfFormatter(logging.Formatter):
         allowed_reserved_attrs: A list of reserved `logging.LogRecord`_ attributes that
         should not be ignored but rather included as additional fields.
 
+        ignored_attrs: A list of additional attributes passed to a `logging.LogRecord`_
+        via the `extra` keyword that will be ignored in addition to the reserved fields
+        and not be present in the ouput.
+
     .. _logging.Formatter:
        https://docs.python.org/3/library/logging.html#logging.Formatter
 
@@ -89,10 +93,11 @@ class GelfFormatter(logging.Formatter):
        https://docs.python.org/3/library/logging.html#logrecord-attributes
     """
 
-    def __init__(self, allowed_reserved_attrs=[]):
+    def __init__(self, allowed_reserved_attrs=[], ignored_attrs=[]):
         """Initializes a GelfFormatter."""
         super(GelfFormatter, self).__init__()
         self.allowed_reserved_attrs = allowed_reserved_attrs
+        self.ignored_attrs = ignored_attrs
         self._hostname = socket.gethostname()
 
     def format(self, record):
@@ -127,10 +132,15 @@ class GelfFormatter(logging.Formatter):
         if "asctime" in self.allowed_reserved_attrs:
             record.asctime = self.formatTime(record)
 
+        # Compute excluded attributes
+        excluded_attrs = [
+            x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs
+        ]
+        excluded_attrs += self.ignored_attrs
+
         # Everything else is considered an additional attribute
-        exclude = [x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs]
         for key, value in record.__dict__.items():
-            if key not in GELF_IGNORED_ATTRS and key not in exclude:
+            if key not in GELF_IGNORED_ATTRS and key not in excluded_attrs:
                 log_record[_prefix(key)] = value
 
         # Serialize as JSON
