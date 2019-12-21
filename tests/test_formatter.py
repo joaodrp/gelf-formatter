@@ -1,7 +1,7 @@
 import json
 import logging
-import traceback
 import time
+import traceback
 from unittest import TestCase
 
 from mock import MagicMock, patch  # Python 2.7 support
@@ -111,7 +111,7 @@ class TestGelfFormatter(TestCase):
         # Set time converter to have consistent results when testing
         # in different timezones
         formatter.converter = time.gmtime
-        
+
         self.log_handler.setFormatter(formatter)
 
         self.logger.info(MSG)
