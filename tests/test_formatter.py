@@ -104,6 +104,15 @@ class TestGelfFormatter(TestCase):
         gelf = json.loads(self.buffer.getvalue())
         self.assertEqual(gelf["full_message"], full_message)
 
+    def testAsctime(self):
+        formatter = GelfFormatter(allowed_reserved_attrs=["asctime"])
+        self.log_handler.setFormatter(formatter)
+
+        self.logger.info(MSG)
+
+        gelf = json.loads(self.buffer.getvalue())
+        self.assertEqual(gelf["_asctime"], "2019-04-29 21:10:19,768")
+
     def testLevels(self):
         formatter = GelfFormatter()
         self.log_handler.setFormatter(formatter)
