@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 import traceback
 from unittest import TestCase
 
@@ -103,6 +104,20 @@ class TestGelfFormatter(TestCase):
 
         gelf = json.loads(self.buffer.getvalue())
         self.assertEqual(gelf["full_message"], full_message)
+
+    def testAsctime(self):
+        formatter = GelfFormatter(allowed_reserved_attrs=["asctime"])
+
+        # Set time converter to have consistent results when testing
+        # in different timezones
+        formatter.converter = time.gmtime
+
+        self.log_handler.setFormatter(formatter)
+
+        self.logger.info(MSG)
+
+        gelf = json.loads(self.buffer.getvalue())
+        self.assertEqual(gelf["_asctime"], "2019-04-29 19:10:19,768")
 
     def testLevels(self):
         formatter = GelfFormatter()

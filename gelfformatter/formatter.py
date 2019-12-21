@@ -128,6 +128,10 @@ class GelfFormatter(logging.Formatter):
         if record.exc_info is not None:
             log_record["full_message"] = self.formatException(record.exc_info)
 
+        # Set asctime field if required
+        if "asctime" in self.allowed_reserved_attrs:
+            record.asctime = self.formatTime(record)
+
         # Compute excluded attributes
         excluded_attrs = [
             x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs
