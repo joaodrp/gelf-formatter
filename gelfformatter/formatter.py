@@ -125,7 +125,7 @@ class GelfFormatter(logging.Formatter):
 
         # Set asctime field if required
         if "asctime" in self.allowed_reserved_attrs:
-            log_record["_asctime"] = self.formatTime(record)
+            record.asctime = self.formatTime(record)
 
         # Everything else is considered an additional attribute
         exclude = [x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs]
