@@ -10,6 +10,7 @@ module that conforms to the `GELF Payload Specification Version 1.1`_.
    http://docs.graylog.org/en/3.0/pages/gelf.html#gelf-payload-specification
 """
 
+import itertools
 import json
 import logging
 import socket
@@ -100,10 +101,89 @@ class GelfFormatter(logging.Formatter):
         self.ignored_attrs = ignored_attrs
         self._hostname = socket.gethostname()
 
+    def prepare_basic(self, record):
+        """Prepares the basics necessary for a log record.
+
+        Args:
+            record (logging.LogRecord): The original log record that should be formatted
+                as a GELF log message.
+
+        Returns:
+            dict: A basic log record.
+        """
+        # Set asctime field if required
+        if "asctime" in self.allowed_reserved_attrs:
+            record.asctime = self.formatTime(record)
+
+        # Base GELF message structure
+        log_record = dict(
+            version=GELF_VERSION,
+            short_message=record.getMessage(),
+            timestamp=record.created,
+            level=GELF_LEVELS[record.levelno],
+            host=self._hostname,
+        )
+
+        # Capture exception info, if any
+        if record.exc_info:
+            log_record["full_message"] = self.formatException(record.exc_info)
+
+        return log_record
+
+    def filter(self, key, value, excluded_attrs):
+        """Optional log fields may be modified/removed.
+
+        Args:
+            key (str): The log field key.
+            value: The log fields value.
+            excluded_attrs (list): Values to filter out.
+
+        Returns:
+            tuple: A tuple containing the modified fields.
+        """
+        if key not in itertools.chain(GELF_IGNORED_ATTRS, excluded_attrs):
+            if isinstance(value, dict):
+                filtered = dict()
+                for k, v in value.items():
+                    k, v = self.filter(k, v, excluded_attrs)
+                    if k:
+                        filtered[k] = v
+                return key, filtered
+            return key, value
+        return (None, None)
+
+    def get_optionals(self, record):
+        """Adds optional log fields from the original record.
+
+        Args:
+            record (logging.LogRecord): The original log record with
+            optional fields set.
+
+        Returns:
+            dict: The optional fields with gelf compliant naming.
+        """
+
+        optionals = dict()
+
+        # Compute excluded attributes
+        excluded_attrs = [
+            x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs
+        ]
+        excluded_attrs += self.ignored_attrs
+
+        for key, value in record.__dict__.items():
+            key, value = self.filter(key, value, excluded_attrs)
+            if key:
+                optionals[_prefix(key)] = value
+
+        return optionals
+
     def format(self, record):
         """Formats a log record according to the GELF specification.
 
         Overrides `logging.Formatter.format`_.
+        First computes the required fields for a gelf message,
+        then adds optional fields.
 
         Args:
             record (logging.LogRecord): The original log record that should be formatted
@@ -115,33 +195,9 @@ class GelfFormatter(logging.Formatter):
         .. _logging.Formatter.format:
            https://docs.python.org/3/library/logging.html#logging.Formatter.format
         """
-        # Base GELF message structure
-        log_record = dict(
-            version=GELF_VERSION,
-            short_message=record.getMessage(),
-            timestamp=record.created,
-            level=GELF_LEVELS[record.levelno],
-            host=self._hostname,
-        )
 
-        # Capture exception info, if any
-        if record.exc_info is not None:
-            log_record["full_message"] = self.formatException(record.exc_info)
-
-        # Set asctime field if required
-        if "asctime" in self.allowed_reserved_attrs:
-            record.asctime = self.formatTime(record)
-
-        # Compute excluded attributes
-        excluded_attrs = [
-            x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs
-        ]
-        excluded_attrs += self.ignored_attrs
-
-        # Everything else is considered an additional attribute
-        for key, value in record.__dict__.items():
-            if key not in GELF_IGNORED_ATTRS and key not in excluded_attrs:
-                log_record[_prefix(key)] = value
+        gelf_record = self.prepare_basic(record)
+        gelf_record.update(self.get_optionals(record))
 
         # Serialize as JSON
-        return json.dumps(log_record)
+        return json.dumps(gelf_record)
