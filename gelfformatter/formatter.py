@@ -141,7 +141,16 @@ class GelfFormatter(logging.Formatter):
         # Everything else is considered an additional attribute
         for key, value in record.__dict__.items():
             if key not in GELF_IGNORED_ATTRS and key not in excluded_attrs:
-                log_record[_prefix(key)] = value
+                try:
+                    json.dumps(value)
+                except (TypeError, OverflowError):
+                    # If value is not JSON serializable
+                    # convert to string
+                    log_record[_prefix(key)] = str(value)
+                else:
+                    # If value is JSON serializable,
+                    # value will be encoded in the following return
+                    log_record[_prefix(key)] = value
 
         # Serialize as JSON
         return json.dumps(log_record)
