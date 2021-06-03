@@ -14,16 +14,13 @@ jobs:
       script: make lint
       python: '3.7'
     - stage: test
-      python: '2.7'
-      script: make test
-    - stage: test
-      python: '3.5'
-      script: make test
-    - stage: test
       python: '3.6'
       script: make test
     - stage: test
       python: '3.8'
+      script: make test
+    - stage: test
+      python: '3.9'
       script: make test
     - stage: test
       python: '3.7'
