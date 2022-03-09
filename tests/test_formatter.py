@@ -180,6 +180,46 @@ class TestGelfFormatter(TestCase):
             },
         )
 
+    def testFormatEnsureAsciiShouldNotContainUtf8(self):
+        # GIVEN
+        non_ascii_msg = "test message with â, ã, á, à"
+        ascii_msg = "test message with \\u00e2, \\u00e3, \\u00e1, \\u00e0"
+        formatter = GelfFormatter(dumps_args={'ensure_ascii': True})
+        self.log_handler.setFormatter(formatter)
+        self.logger.info(non_ascii_msg)
+
+        # WHEN
+        should_be_an_ascii_msg = self.buffer.getvalue()
+
+        # THEN
+        self.assertIn(ascii_msg, should_be_an_ascii_msg)
+
+    def testFormatEnsureAsciiFalseShouldContainUtf8(self):
+        # GIVEN
+        non_ascii_msg = "test message with â, ã, á, à"
+        formatter = GelfFormatter(dumps_args={'ensure_ascii': False})
+        self.log_handler.setFormatter(formatter)
+        self.logger.info(non_ascii_msg)
+
+        # WHEN
+        should_not_be_an_ascii_msg = self.buffer.getvalue()
+
+        # THEN
+        self.assertIn(non_ascii_msg, should_not_be_an_ascii_msg)
+
+    def testFormatSettingIndentShouldCorrectlyIndentOutput(self):
+        # GIVEN
+        formatter = GelfFormatter(dumps_args={'indent': 4})
+        self.log_handler.setFormatter(formatter)
+
+        self.logger.info(MSG)
+
+        # WHEN
+        should_be_indented_with_4_spaces = self.buffer.getvalue()
+
+        # THEN
+        self.assertIn(f'    "short_message": "{MSG}"', should_be_indented_with_4_spaces)
+
 
 class TestUtilityMethods(TestCase):
     def testUnderscorePrefix(self):

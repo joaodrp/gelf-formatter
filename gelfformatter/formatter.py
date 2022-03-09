@@ -93,12 +93,13 @@ class GelfFormatter(logging.Formatter):
        https://docs.python.org/3/library/logging.html#logrecord-attributes
     """
 
-    def __init__(self, allowed_reserved_attrs=[], ignored_attrs=[]):
+    def __init__(self, allowed_reserved_attrs=[], ignored_attrs=[], dumps_args={}):
         """Initializes a GelfFormatter."""
         super(GelfFormatter, self).__init__()
         self.allowed_reserved_attrs = allowed_reserved_attrs
         self.ignored_attrs = ignored_attrs
         self._hostname = socket.gethostname()
+        self.dumps_args = dumps_args
 
     def format(self, record):
         """Formats a log record according to the GELF specification.
@@ -153,4 +154,4 @@ class GelfFormatter(logging.Formatter):
                     log_record[_prefix(key)] = value
 
         # Serialize as JSON
-        return json.dumps(log_record)
+        return json.dumps(log_record, **self.dumps_args)
