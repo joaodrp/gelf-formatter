@@ -2,16 +2,11 @@ import json
 import logging
 import time
 import traceback
+from io import StringIO
 from unittest import TestCase
-
-from mock import MagicMock, patch  # Python 2.7 support
+from unittest.mock import MagicMock, patch
 
 from gelfformatter.formatter import GELF_LEVELS, GelfFormatter, _prefix
-
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO  # Python 3 support
 
 
 TIME = 1556565019.768748

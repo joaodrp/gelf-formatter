@@ -60,16 +60,16 @@ RESERVED_ATTRS = (
 """
 
 
-def _prefix(str):
+def _prefix(value):
     """Prefixes a string with an underscore.
 
     Args:
-        str (str): The string to prefix.
+        value (str): The string to prefix.
 
     Returns:
         str: The prefixed string.
     """
-    return str if str.startswith("_") else "_%s" % str
+    return value if value.startswith("_") else "_%s" % value
 
 
 class GelfFormatter(logging.Formatter):
@@ -93,11 +93,11 @@ class GelfFormatter(logging.Formatter):
        https://docs.python.org/3/library/logging.html#logrecord-attributes
     """
 
-    def __init__(self, allowed_reserved_attrs=[], ignored_attrs=[]):
+    def __init__(self, allowed_reserved_attrs=None, ignored_attrs=None):
         """Initializes a GelfFormatter."""
-        super(GelfFormatter, self).__init__()
-        self.allowed_reserved_attrs = allowed_reserved_attrs
-        self.ignored_attrs = ignored_attrs
+        super().__init__()
+        self.allowed_reserved_attrs = allowed_reserved_attrs or []
+        self.ignored_attrs = ignored_attrs or []
         self._hostname = socket.gethostname()
 
     def format(self, record):
