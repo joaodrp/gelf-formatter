@@ -10,6 +10,7 @@ from gelfformatter.formatter import GELF_LEVELS, GelfFormatter, _prefix
 
 
 TIME = 1556565019.768748
+TIME_NS = 1556565019768748000  # TIME in nanoseconds for Python 3.13+
 HOST = "server-x"
 MSG = "test message"
 
@@ -22,7 +23,8 @@ def chomp(x):
     return x
 
 
-@patch("time.time", MagicMock(return_value=TIME))
+@patch("logging.time.time_ns", MagicMock(return_value=TIME_NS))
+@patch("logging.time.time", MagicMock(return_value=TIME))
 @patch("socket.gethostname", MagicMock(return_value=HOST))
 class TestGelfFormatter(TestCase):
     def setUp(self):
