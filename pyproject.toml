@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gelf-formatter"
-version = "0.2.1"
+version = "1.0.0"
 description = "GELF formatter for the Python standard library logging module."
 readme = "README.md"
 license = "MIT"

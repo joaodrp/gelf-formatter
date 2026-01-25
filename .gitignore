@@ -1,11 +1,36 @@
-.git/
-.tox/
-.coverage
-htmlcov/
+# Build
 dist/
 build/
-.eggs/
+*.egg-info/
+*.egg
+
+# Python
 __pycache__/
-*.pyc
-*.egg-info
+*.py[cod]
+*$py.class
+.Python
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+
+# Virtual environments
+.venv/
+venv/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project
 .envrc
+.context/

@@ -177,6 +177,20 @@ class TestGelfFormatter(TestCase):
             },
         )
 
+    def testNonSerializable(self):
+        formatter = GelfFormatter()
+        self.log_handler.setFormatter(formatter)
+
+        # Pass a non-JSON-serializable object (a set)
+        self.logger.info(MSG, extra={"data": {1, 2, 3}})
+
+        gelf = json.loads(self.buffer.getvalue())
+        # Non-serializable values are converted to strings
+        self.assertIn("_data", gelf)
+        self.assertIn("1", gelf["_data"])
+        self.assertIn("2", gelf["_data"])
+        self.assertIn("3", gelf["_data"])
+
 
 class TestUtilityMethods(TestCase):
     def testUnderscorePrefix(self):
