@@ -1,11 +1,23 @@
-# GELF Formatter
+<h1 align="center" style="border-bottom: none;">GELF Formatter</h1>
+<h3 align="center">
+    <a href="http://docs.graylog.org/en/latest/pages/gelf.html">Graylog Extended Log Format (GELF)</a> formatter for the<br>Python standard library <a href="https://docs.python.org/3/library/logging.html">logging</a> module
+</h3>
+<p align="center">
+    <a href="https://pypi.org/project/gelf-formatter/">
+        <img alt="PyPI" src="https://img.shields.io/pypi/v/gelf-formatter.svg">
+    </a>
+    <a href="https://pypi.org/project/gelf-formatter/">
+        <img alt="Python versions" src="https://img.shields.io/pypi/pyversions/gelf-formatter.svg">
+    </a>
+    <a href="https://github.com/joaodrp/gelf-formatter/actions/workflows/ci.yml">
+        <img alt="CI" src="https://github.com/joaodrp/gelf-formatter/actions/workflows/ci.yml/badge.svg">
+    </a>
+    <a href="LICENSE">
+        <img alt="License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg">
+    </a>
+</p>
 
-[Graylog Extended Log Format (GELF)](http://docs.graylog.org/en/latest/pages/gelf.html) formatter for the Python standard library [logging](https://docs.python.org/3/library/logging.html) module.
-
-[![PyPI](https://img.shields.io/pypi/v/gelf-formatter.svg)](https://pypi.org/project/gelf-formatter/)
-[![Python versions](https://img.shields.io/pypi/pyversions/gelf-formatter.svg)](https://pypi.org/project/gelf-formatter/)
-[![CI](https://github.com/joaodrp/gelf-formatter/actions/workflows/ci.yml/badge.svg)](https://github.com/joaodrp/gelf-formatter/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
+---
 
 ## Motivation
 
