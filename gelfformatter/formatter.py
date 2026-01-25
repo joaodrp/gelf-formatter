@@ -10,26 +10,29 @@ module that conforms to the `GELF Payload Specification Version 1.1`_.
    http://docs.graylog.org/en/3.0/pages/gelf.html#gelf-payload-specification
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import socket
+from typing import Any
 
-GELF_VERSION = "1.1"
-"""str: GELF specification version."""
+GELF_VERSION: str = "1.1"
+"""GELF specification version."""
 
-GELF_LEVELS = {
+GELF_LEVELS: dict[int, int] = {
     logging.DEBUG: 7,
     logging.INFO: 6,
     logging.WARNING: 4,
     logging.ERROR: 3,
     logging.CRITICAL: 2,
 }
-"""dict: Map of logging levels vs syslog levels."""
+"""Map of logging levels vs syslog levels."""
 
-GELF_IGNORED_ATTRS = ["id"]
-"""List[str]: Attributes prohibited by the GELF specification."""
+GELF_IGNORED_ATTRS: list[str] = ["id"]
+"""Attributes prohibited by the GELF specification."""
 
-RESERVED_ATTRS = (
+RESERVED_ATTRS: tuple[str, ...] = (
     "args",
     "asctime",
     "created",
@@ -54,23 +57,23 @@ RESERVED_ATTRS = (
     "thread",
     "threadName",
 )
-"""List[str]: The `logging.LogRecord`_ attributes that should be ignored by default.
+"""The `logging.LogRecord`_ attributes that should be ignored by default.
 
 .. _logging.LogRecord:
    https://docs.python.org/3/library/logging.html#logrecord-attributes
 """
 
 
-def _prefix(value):
+def _prefix(value: str) -> str:
     """Prefixes a string with an underscore.
 
     Args:
-        value (str): The string to prefix.
+        value: The string to prefix.
 
     Returns:
-        str: The prefixed string.
+        The prefixed string.
     """
-    return value if value.startswith("_") else "_%s" % value
+    return value if value.startswith("_") else f"_{value}"
 
 
 class GelfFormatter(logging.Formatter):
@@ -94,36 +97,44 @@ class GelfFormatter(logging.Formatter):
        https://docs.python.org/3/library/logging.html#logrecord-attributes
     """
 
-    def __init__(self, allowed_reserved_attrs=None, ignored_attrs=None):
+    allowed_reserved_attrs: list[str]
+    ignored_attrs: list[str]
+    _hostname: str
+
+    def __init__(
+        self,
+        allowed_reserved_attrs: list[str] | None = None,
+        ignored_attrs: list[str] | None = None,
+    ) -> None:
         """Initializes a GelfFormatter."""
         super().__init__()
         self.allowed_reserved_attrs = allowed_reserved_attrs or []
         self.ignored_attrs = ignored_attrs or []
         self._hostname = socket.gethostname()
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         """Formats a log record according to the GELF specification.
 
         Overrides `logging.Formatter.format`_.
 
         Args:
-            record (logging.LogRecord): The original log record that should be formatted
+            record: The original log record that should be formatted
                 as a GELF log message.
 
         Returns:
-            str: The serialized JSON GELF log message.
+            The serialized JSON GELF log message.
 
         .. _logging.Formatter.format:
            https://docs.python.org/3/library/logging.html#logging.Formatter.format
         """
         # Base GELF message structure
-        log_record = dict(
-            version=GELF_VERSION,
-            short_message=record.getMessage(),
-            timestamp=record.created,
-            level=GELF_LEVELS[record.levelno],
-            host=self._hostname,
-        )
+        log_record: dict[str, Any] = {
+            "version": GELF_VERSION,
+            "short_message": record.getMessage(),
+            "timestamp": record.created,
+            "level": GELF_LEVELS[record.levelno],
+            "host": self._hostname,
+        }
 
         # Capture exception info, if any
         if record.exc_info is not None:
@@ -134,7 +145,7 @@ class GelfFormatter(logging.Formatter):
             record.asctime = self.formatTime(record)
 
         # Compute excluded attributes
-        excluded_attrs = [
+        excluded_attrs: list[str] = [
             x for x in RESERVED_ATTRS if x not in self.allowed_reserved_attrs
         ]
         excluded_attrs += self.ignored_attrs
@@ -145,8 +156,7 @@ class GelfFormatter(logging.Formatter):
                 try:
                     json.dumps(value)
                 except (TypeError, OverflowError):
-                    # If value is not JSON serializable
-                    # convert to string
+                    # If value is not JSON serializable, convert to string
                     log_record[_prefix(key)] = str(value)
                 else:
                     # If value is JSON serializable,
