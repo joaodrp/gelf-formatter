@@ -1,57 +1,26 @@
 .SILENT: ;
 .DEFAULT_GOAL := help
 
-setup: ## Get development dependencies
-	pip install pipenv --upgrade
-	pipenv install --dev
-
-clean-build:
-	rm -rf build/
-	rm -rf dist/
-	find . -name '*.egg-info' -exec rm -rf {} +
-	find . -name '*.egg' -exec rm -rf {} +
-
-clean-pyc:
-	find . -name '*.pyc' -exec rm -f {} +
-	find . -name '*.pyo' -exec rm -f {} +
-	find . -name '*~' -exec rm -f {} +
-	find . -name '__pycache__' -exec rm -rf {} +
-
-clean-test:
-	rm -rf .tox/
-	rm -f .coverage
-	rm -rf htmlcov/
-
-clean: clean-build clean-pyc clean-test ## Remove object and cache files
-
 lint: ## Run linters
-	pipenv run flake8
-	pipenv run black --check .
-	isort --check-only
+	uv tool run ruff check
+	uv tool run ruff format --check
 
-test: ## Run test suite
-	pipenv run python -m unittest discover -v
+typecheck: ## Run type checker
+	uv run --with mypy mypy gelfformatter
 
-test-all: ## Run all tests
-	pipenv run tox
+test: ## Run test suite with coverage
+	uv run --with pytest --with pytest-cov pytest --cov=gelfformatter --cov-report=term-missing
 
-coverage: ## Generate test coverage report
-	pipenv run coverage run -m --branch unittest discover -v
-	pipenv run coverage report -m --include='gelfformatter/*'
+ci: lint typecheck test ## Run all checks (matches CI)
 
-coverage-html: coverage ## Generate HTML test coverage report
-	pipenv run coverage html
-
-ci: lint coverage ## Run all tests and code checks
-
-.PHONY: dist
-dist: clean ## Package
-	pipenv run python setup.py sdist bdist_wheel
-	ls -l dist
-
-publish: dist ## Publish package
-	pipenv run twine upload dist/*
+clean: ## Remove build artifacts and caches
+	rm -rf build/ dist/ .coverage htmlcov/ .pytest_cache/ .ruff_cache/ .mypy_cache/
+	find . -name '*.egg-info' -exec rm -rf {} +
+	find . -name '*.pyc' -delete
+	find . -name '__pycache__' -type d -exec rm -rf {} +
 
 help: ## Display this help
 	awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / \
-	{printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	{printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+.PHONY: lint typecheck test ci clean help

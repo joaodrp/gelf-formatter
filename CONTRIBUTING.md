@@ -33,14 +33,8 @@ The name of your branch should follow this syntax:
 
 Prerequisites:
 
-- `make`
-- [Python 3.7+](https://www.python.org/downloads/)
-
-Install development dependencies:
-
-```
-$ make setup
-```
+- [`uv`](https://docs.astral.sh/uv/) (manages Python and dependencies)
+- `make` (optional, convenience wrapper around `uv` commands)
 
 Run the test suite to make sure everything is properly setup:
 
@@ -50,11 +44,13 @@ $ make test
 
 ### Develop
 
-Make your changes and run the test suite and linters:
+Make your changes and run the linters, type checker, and tests (matches CI):
 
 ```
 $ make ci
 ```
+
+Individual targets are also available: `make lint`, `make typecheck`, `make test`. Run `make help` to list all targets.
 
 #### Commit
 

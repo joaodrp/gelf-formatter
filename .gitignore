@@ -16,10 +16,17 @@ __pycache__/
 htmlcov/
 .tox/
 
+# Tooling caches
+.ruff_cache/
+.mypy_cache/
+
 # Virtual environments
 .venv/
 venv/
 .env
+
+# uv (library — do not commit lockfile)
+uv.lock
 
 # IDE
 .idea/
