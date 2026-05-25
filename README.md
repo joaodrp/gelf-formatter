@@ -21,7 +21,7 @@
 
 ## Motivation
 
-There are several packages available providing *handlers* for the standard library logging module that can send application logs to [Graylog](https://www.graylog.org/) by TCP/UDP/HTTP ([py-gelf](https://pypi.org/project/pygelf/) is a good example). Although these can be useful, it's not ideal to make an application performance dependent on network requests just for the purpose of delivering logs.
+There are several packages available providing *handlers* for the standard library logging module that can send application logs to [Graylog](https://www.graylog.org/) over TCP/UDP/HTTP ([py-gelf](https://pypi.org/project/pygelf/) is a good example). Although these can be useful, it's not ideal to make an application performance dependent on network requests just for the purpose of delivering logs.
 
 Alternatively, one can simply log to a file or `stdout` and have a collector (like [Fluentd](https://www.fluentd.org/)) processing and sending those logs *asynchronously* to a remote server (and not just to Graylog, as GELF can be used as a generic log format), which is a common pattern for containerized applications. In a scenario like this all we need is a GELF logging *formatter*.
 
