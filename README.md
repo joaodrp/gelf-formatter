@@ -1,6 +1,6 @@
 <h1 align="center" style="border-bottom: none;">GELF Formatter</h1>
 <h3 align="center">
-    <a href="http://docs.graylog.org/en/latest/pages/gelf.html">Graylog Extended Log Format (GELF)</a> formatter for the<br>Python standard library <a href="https://docs.python.org/3/library/logging.html">logging</a> module
+    <a href="https://go2docs.graylog.org/current/getting_in_log_data/gelf_format.html">Graylog Extended Log Format (GELF)</a> formatter for the<br>Python standard library <a href="https://docs.python.org/3/library/logging.html">logging</a> module
 </h3>
 <p align="center">
     <a href="https://pypi.org/project/gelf-formatter/">
@@ -72,7 +72,7 @@ That's it. You can now use the logging module as usual, all records will be form
 
 ### Standard Fields
 
-The formatter outputs all (non-deprecated) fields described in the [GELF Payload Specification (version 1.1)](http://docs.graylog.org/en/latest/pages/gelf.html#gelf-payload-specification):
+The formatter outputs all (non-deprecated) fields described in the [GELF Payload Specification (version 1.1)](https://go2docs.graylog.org/5-0/getting_in_log_data/gelf.html?Highlight=Payload#GELFPayloadSpecification):
 
 - `version`: String, always set to `1.1`
 - `host`: String, the output of [`socket.gethostname`](https://docs.python.org/3/library/socket.html#socket.gethostname) at initialization

@@ -7,7 +7,7 @@ module that conforms to the `GELF Payload Specification Version 1.1`_.
    https://docs.python.org/3/library/logging.html
 
 .. _GELF Payload Specification Version 1.1:
-   http://docs.graylog.org/en/3.0/pages/gelf.html#gelf-payload-specification
+   https://go2docs.graylog.org/5-0/getting_in_log_data/gelf.html?Highlight=Payload#GELFPayloadSpecification
 """
 
 from __future__ import annotations
